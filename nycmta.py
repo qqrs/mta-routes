@@ -1,23 +1,6 @@
 import csv
 
 
-#class Route(object):
-    #all_routes = {}
-
-#class Route(object):
-    #all_routes = {}
-    #def __new__(cls, name, *args, **kwargs):
-        #if not name in self.all_routes:
-            #r = super(Route, cls).__new__(cls, name, *args, **kwargs)
-            #r.name = name
-            #r.stations = list()
-            #self.all_routes[name] = r
-        #return self.all_routes[name]
-
-    #def __init__(self, name, *stations):
-        #self.name = name
-        #self.stations = stations
-
 class TransitSystem(object):
     def __init__(self):
         self.stations = []
