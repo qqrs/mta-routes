@@ -8,36 +8,48 @@ class TransitSystem(object):
 
     def parse_stops(self, stops):
         """Parse data from stops.txt"""
-        stop_defs = filter(lambda st: st['location_type'] == '1', stops)
+        #stop_defs = filter(lambda st: st['location_type'] == '1', stops)
+        stop_defs = (st for st in stops if st['location_type'] == '1')
         stop_defs = uniq(stop_defs, lambda sd: sd['stop_name'])
         stations = (self.build_station(sd) for sd in stop_defs)
         self.stations = list(stations)
 
     def parse_stop_times(self, stop_times):
         """Parse data from stop_times.txt"""
-        for s in stop_times:
-            if (len(s['stop_id']) != 4):
-                raise IndexError("invalid length: stop_id=%s" % s['stop_id'])
-            s.update(self.parse_trip_id(s['trip_id']))
+        #if (len(s['stop_id']) != 4):
+            #raise IndexError("invalid length: stop_id=%s" % s['stop_id'])
             #print self.parse_trip_time(s['departure_time'])
-            print s
-            break
-        #print (h,m,sec)
+        stop_times = self.parse_trip_id(stop_times)
 
-    def parse_trip_id(self, trip_id):
-        """Parse a stop_id with form: A20121216WKD_000800_1..S03R"""
-        if (len(trip_id) != 27):
-            raise IndexError("invalid length: trip_id=%s" % trip_id)
-        return dict(zip(("service_id", "service_day", "trip_start_time",
-                         "trip_route", "shape_id"),
-                       (trip_id[0:12], trip_id[9:12], trip_id[13:19],
-                           trip_id[20], trip_id[23:27])))
+        # weekday service, between 8 am and 2 pm
+        stop_times = (s for s in stop_times if s['service_day'] == 'WKD')
+        stop_times = (s for s in stop_times if
+                      48000 <= int(s['trip_start_time']) <= 84000)
+        print len(list(stop_times))
+        #for _ in range(10):
+            #print stop_times.next()
 
-    def parse_trip_time(self, trip_time):
-        if (len(trip_time) != 8):
-            raise IndexError("invalid length: time=%s" % trip_time)
-        (h, m, s) = [int(t) for t in trip_time.split(":")]
-        return (h, m, s)
+    def parse_trip_id(self, stop_time_defs):
+        """Parse a stop_id fields with form: A20121216WKD_000800_1..S03R"""
+        for s in stop_time_defs:
+            try:
+                trip_id = s['trip_id']
+            except KeyError:
+                raise AttributeError("No trip_id for %s" % s)
+            if (len(trip_id) != 27):
+                raise IndexError("invalid length: trip_id=%s" % trip_id)
+            s.update(dict(zip(
+                    ("service_id", "service_day", "trip_start_time",
+                        "trip_route", "shape_id"),
+                    (trip_id[0:12], trip_id[9:12], trip_id[13:19],
+                        trip_id[20], trip_id[23:27]))))
+            yield s
+
+    #def parse_trip_time(self, trip_time):
+        #if (len(trip_time) != 8):
+            #raise IndexError("invalid length: time=%s" % trip_time)
+        #(h, m, s) = [int(t) for t in trip_time.split(":")]
+        #return (h, m, s)
 
     #def parse_station_entrances(self, station_entrances):
         #station_defs = uniq(station_entrances,
