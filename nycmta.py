@@ -1,4 +1,5 @@
 import csv
+from itertools import groupby
 
 
 class TransitSystem(object):
@@ -25,7 +26,12 @@ class TransitSystem(object):
         stop_times = (s for s in stop_times if s['service_day'] == 'WKD')
         stop_times = (s for s in stop_times if
                       48000 <= int(s['trip_start_time']) <= 84000)
-        print len(list(stop_times))
+        for key, group in groupby(stop_times, lambda s: s['trip_id']):
+            print key
+            for st in group:
+                print st['stop_id']
+            break
+
         #for _ in range(10):
             #print stop_times.next()
 
