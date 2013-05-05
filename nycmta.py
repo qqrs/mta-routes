@@ -24,18 +24,19 @@ class TransitSystem(object):
                       48000 <= int(s['trip_start_time']) <= 84000)
         #stop_times = (s for s in stop_times if s['trip_route'] == 'A')
 
-        for trip_id, group in groupby(stop_times, lambda s: s['trip_id']):
-            print trip_id
-            for st in group:
-                print st['stop_id'],
-                stop_id = st['stop_id']
+        for ((trip_id, trip_route), group) in groupby(
+                stop_times, lambda s: (s['trip_id'], s['trip_route'])):
+            route = self.build_route(trip_route)
+            for stop in group:
+                stop_id = stop['stop_id']
                 if (len(stop_id) != 4):
                     raise IndexError("invalid length: stop_id=%s" % stop_id)
                 try:
-                    print self.stations[stop_id[0:3]]
+                    station = self.stations[stop_id[0:3]]
                 except KeyError:
                     raise KeyError("No Station found for stop_id=%s" % stop_id)
-            break
+                if station not in route.stations:
+                    route.stations.append(station)
 
         #for _ in range(10):
             #print stop_times.next()
@@ -175,6 +176,13 @@ def main():
     #for s in transit.stations.values():
         #print repr(s)
     #print transit.stations
+    print len(transit.routes)
+    print len(transit.routes['F'].stations)
+
+    count = 0
+    for r in transit.routes.values():
+        count += len(r.stations)
+    print count
 
     #print sorted(transit.stations.keys())
 
