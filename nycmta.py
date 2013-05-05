@@ -16,22 +16,28 @@ class TransitSystem(object):
     def parse_stop_times(self, stop_times):
         """Parse data from stop_times.txt"""
         for s in stop_times:
-            #(h,m,sec) = map(int, s['departure_time'].split(":"))
-            assert(len(s['departure_time']) == 8)
-            assert(len(s['trip_id']) == 27)
-            assert(len(s['stop_id']) == 4)
-            print self.parse_trip_id(s['trip_id'])
+            if (len(s['stop_id']) != 4):
+                raise IndexError("invalid length: stop_id=%s" % s['stop_id'])
+            s.update(self.parse_trip_id(s['trip_id']))
+            #print self.parse_trip_time(s['departure_time'])
+            print s
             break
         #print (h,m,sec)
 
     def parse_trip_id(self, trip_id):
         """Parse a stop_id with form: A20121216WKD_000800_1..S03R"""
-        if (len(trip_id) != 27):     # TODO: more specific exception type
-            raise Exception("trip_id with invalid length: %s" % trip_id)
+        if (len(trip_id) != 27):
+            raise IndexError("invalid length: trip_id=%s" % trip_id)
         return dict(zip(("service_id", "service_day", "trip_start_time",
                          "trip_route", "shape_id"),
                        (trip_id[0:12], trip_id[9:12], trip_id[13:19],
                            trip_id[20], trip_id[23:27])))
+
+    def parse_trip_time(self, trip_time):
+        if (len(trip_time) != 8):
+            raise IndexError("invalid length: time=%s" % trip_time)
+        (h, m, s) = [int(t) for t in trip_time.split(":")]
+        return (h, m, s)
 
     #def parse_station_entrances(self, station_entrances):
         #station_defs = uniq(station_entrances,
@@ -133,8 +139,8 @@ def main():
     transit = TransitSystem()
     with open('google_transit/stops.txt') as csvfile:
         transit.parse_stops(parse_csv(csvfile))
-    #with open('google_transit/stop_times.txt') as csvfile:
-        #transit.parse_stop_times(parse_csv(csvfile))
+    with open('google_transit/stop_times.txt') as csvfile:
+        transit.parse_stop_times(parse_csv(csvfile))
 
     #with open('StationEntrances.csv', 'rb') as csvfile:
         #transit.parse_station_entrances(parse_csv(csvfile))
@@ -143,8 +149,8 @@ def main():
     #for s in [it.next() for _ in range(10)]:
         #print s
 
-    for s in transit.stations:
-        print repr(s)
+    #for s in transit.stations:
+        #print repr(s)
 
     #print transit.routes['G'].str_full()
     #print transit.routes['F'].str_full()
