@@ -4,32 +4,37 @@ from itertools import groupby
 
 class TransitSystem(object):
     def __init__(self):
-        self.stations = []
+        self.stations = {}
         self.routes = {}
 
     def parse_stops(self, stops):
         """Parse data from stops.txt"""
-        #stop_defs = filter(lambda st: st['location_type'] == '1', stops)
         stop_defs = (st for st in stops if st['location_type'] == '1')
-        stop_defs = uniq(stop_defs, lambda sd: sd['stop_name'])
-        stations = (self.build_station(sd) for sd in stop_defs)
-        self.stations = list(stations)
+        stations = ((s['stop_id'], self.build_station(s)) for s in stop_defs)
+        self.stations = dict(stations)
 
     def parse_stop_times(self, stop_times):
         """Parse data from stop_times.txt"""
-        #if (len(s['stop_id']) != 4):
-            #raise IndexError("invalid length: stop_id=%s" % s['stop_id'])
-            #print self.parse_trip_time(s['departure_time'])
+        # add split trip_id field into subfields and add to dict
         stop_times = self.parse_trip_id(stop_times)
 
         # weekday service, between 8 am and 2 pm
         stop_times = (s for s in stop_times if s['service_day'] == 'WKD')
         stop_times = (s for s in stop_times if
                       48000 <= int(s['trip_start_time']) <= 84000)
-        for key, group in groupby(stop_times, lambda s: s['trip_id']):
-            print key
+        #stop_times = (s for s in stop_times if s['trip_route'] == 'A')
+
+        for trip_id, group in groupby(stop_times, lambda s: s['trip_id']):
+            print trip_id
             for st in group:
-                print st['stop_id']
+                print st['stop_id'],
+                stop_id = st['stop_id']
+                if (len(stop_id) != 4):
+                    raise IndexError("invalid length: stop_id=%s" % stop_id)
+                try:
+                    print self.stations[stop_id[0:3]]
+                except KeyError:
+                    raise KeyError("No Station found for stop_id=%s" % stop_id)
             break
 
         #for _ in range(10):
@@ -167,8 +172,11 @@ def main():
     #for s in [it.next() for _ in range(10)]:
         #print s
 
-    #for s in transit.stations:
+    #for s in transit.stations.values():
         #print repr(s)
+    #print transit.stations
+
+    #print sorted(transit.stations.keys())
 
     #print transit.routes['G'].str_full()
     #print transit.routes['F'].str_full()
