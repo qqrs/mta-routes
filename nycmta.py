@@ -15,44 +15,43 @@ class TransitSystem(object):
 
     def parse_stop_times(self, stop_times):
         """Parse data from stop_times.txt"""
-        # add split trip_id field into subfields and add to dict
+        # split trip_id field into subfields and add to dict
         stop_times = self.parse_trip_id(stop_times)
 
         # weekday service, between 10 am and 2 pm
         stop_times = (s for s in stop_times if s['service_day'] == 'WKD')
-        #stop_times = (s for s in stop_times if
-                      #60000 <= int(s['trip_start_time']) <= 84000)
-        #stop_times = (s for s in stop_times if s['trip_route'] == 'A')
+        stop_times = (s for s in stop_times if
+                      60000 <= int(s['trip_start_time']) <= 84000)
 
-        # add stations to self.routes
+        self.add_route_stations(stop_times)
+        self.add_station_routes()
+
+    def add_route_stations(self, stop_times):
+        """Add stations to self.routes"""
         for ((trip_id, trip_route), group_it) in groupby(
                 stop_times, lambda s: (s['trip_id'], s['trip_route'])):
-            if trip_route in self.routes:
-                #continue
-                route = self.routes[trip_route]
-            else:
-                route = Route(trip_route)
-                self.routes[trip_route] = route
+            route = self.build_route(trip_route)
 
             group_stops = list(group_it)
-            # this should get important stops but may skip special stops
-            if len(route.stations) > len(group_stops):
-                continue
-            else:
-                route.stations = []
+            # note: this may not be predictable about including special stops
+            if len(route.stations) < len(group_stops):
+                route.stations = self.get_stations_for_stops(group_stops)
 
-            for stop in group_stops:
-                stop_id = stop['stop_id']
-                if (len(stop_id) != 4):
-                    raise IndexError("invalid length: stop_id=%s" % stop_id)
-                try:
-                    station = self.stations[stop_id[0:3]]
-                except KeyError:
-                    raise KeyError("No Station found for stop_id=%s" % stop_id)
-                if station not in route.stations:
-                    route.stations.append(station)
+    def get_stations_for_stops(self, group_stops):
+        stations = []
+        for stop in group_stops:
+            stop_id = stop['stop_id']
+            if (len(stop_id) != 4):
+                raise IndexError("invalid length: stop_id=%s" % stop_id)
+            try:
+                station = self.stations[stop_id[0:3]]
+            except KeyError:
+                raise KeyError("No Station found for stop_id=%s" % stop_id)
+            stations.append(station)
+        return stations
 
-        # add routes to self.stations
+    def add_station_routes(self):
+        """Add routes to self.stations."""
         for r in self.routes.values():
             for st in r.stations:
                 self.stations[st.id].routes.append(r)
@@ -137,6 +136,20 @@ class Station(object):
     def __str__(self):
         return self.name
 
+    def find_adjacent(self):
+        adjacent = set()
+        for r in self.routes:
+            home_index = r.stations.index(self)
+            try:
+                adjacent.add(r.stations[home_index-1])
+            except IndexError:
+                pass
+            try:
+                adjacent.add(r.stations[home_index+1])
+            except IndexError:
+                pass
+        return list(adjacent)
+
 
 class Route(object):
     def __init__(self, name, stations=None):
@@ -192,6 +205,9 @@ def main():
     #print "\n===\n".join(r.str_full() for r in transit.routes.values())
 
     fourth_ave = transit.stations['F23']
+    print fourth_ave.find_adjacent()
+    print transit.stations['A33'].find_adjacent()
+    print transit.stations['A41'].find_adjacent()
 
     return transit
 
