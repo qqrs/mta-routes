@@ -33,13 +33,14 @@ class TransitSystem(object):
             route = self.build_route(trip_route)
 
             group_stops = list(group_it)
-            # note: this may not be predictable about including special stops
+            # note: may include some special stops but not others
             if len(route.stations) < len(group_stops):
                 route.stations = self.get_stations_for_stops(group_stops)
 
-    def get_stations_for_stops(self, group_stops):
+    def get_stations_for_stops(self, stops):
+        """Get Station objects corresponding to stops, by stop_id"""
         stations = []
-        for stop in group_stops:
+        for stop in stops:
             stop_id = stop['stop_id']
             if (len(stop_id) != 4):
                 raise IndexError("invalid length: stop_id=%s" % stop_id)
@@ -72,52 +73,17 @@ class TransitSystem(object):
                         trip_id[20], trip_id[23:27]))))
             yield s
 
-    #def parse_trip_time(self, trip_time):
-        #if (len(trip_time) != 8):
-            #raise IndexError("invalid length: time=%s" % trip_time)
-        #(h, m, s) = [int(t) for t in trip_time.split(":")]
-        #return (h, m, s)
-
-    #def parse_station_entrances(self, station_entrances):
-        #station_defs = uniq(station_entrances,
-                            #lambda x: (x['Line'], x['Station_Name']))
-        #print len(list(station_defs))
-        ##stations = (self.build_station(d) for d in station_defs)
-        ##self.stations = list(stations)
-
     def build_station(self, st_def):
+        """Create a Station object from a station_def dict"""
         st = Station(st_def['stop_id'], st_def['stop_name'],
                      st_def['stop_lat'], st_def['stop_lon'])
         return st
 
-    #def build_station(self, station_def):
-        #route_list = list()
-        #st = Station(
-                #station_def['Line'],
-                #station_def['Station_Name'],
-                #station_def['Latitude'],
-                #station_def['Longitude'],
-                #route_list)
-        #routes = [self.build_route(r)
-                    #for r in self.get_station_routes(station_def)]
-        #route_list.extend(routes)
-        #for r in route_list:
-            #r.stations.append(st)
-        #return st
-
     def build_route(self, route_name):
+        """Find or create route with route_name"""
         if route_name not in self.routes:
             self.routes[route_name] = Route(route_name)
         return self.routes[route_name]
-
-    def get_station_routes(self, station_dict):
-        """Get non-empty route names for station in range Route_1 to Route_11.
-        >>> TransitSystem().get_station_routes(
-                        >>> {'Route_1': '1',  'Route_2': '',  'Line': None})
-        ['1']
-        """
-        return filter(None,
-                      [station_dict.get('Route_%d' % i) for i in range(1, 12)])
 
 
 class Station(object):
@@ -137,6 +103,7 @@ class Station(object):
         return self.name
 
     def find_adjacent(self):
+        """Find stations one stop away"""
         adjacent = set()
         for r in self.routes:
             home_index = r.stations.index(self)
@@ -162,23 +129,6 @@ class Route(object):
     def str_full(self):
         return ("Route(%s, stations=%s)" %
                 (self.name, ",\n".join((str(st) for st in self.stations))))
-
-
-def uniq(iterable, keyfn=None):
-    pass
-    """Yields unique items in iterable using keyfn to determine uniqueness.
-    >>> list(uniq([1,2,2]))
-    [1, 2]
-    >>> list(uniq([1,2,3], keyfn=lambda x: x % 2))
-    [1, 2]
-    """
-    seen = set()
-    for value in iterable:
-        key = keyfn(value) if keyfn is not None else value
-        if key in seen:
-            continue
-        seen.add(key)
-        yield value
 
 
 def parse_csv(csvfile):
