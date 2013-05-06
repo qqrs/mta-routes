@@ -18,16 +18,29 @@ class TransitSystem(object):
         # add split trip_id field into subfields and add to dict
         stop_times = self.parse_trip_id(stop_times)
 
-        # weekday service, between 8 am and 2 pm
+        # weekday service, between 10 am and 2 pm
         stop_times = (s for s in stop_times if s['service_day'] == 'WKD')
-        stop_times = (s for s in stop_times if
-                      48000 <= int(s['trip_start_time']) <= 84000)
+        #stop_times = (s for s in stop_times if
+                      #60000 <= int(s['trip_start_time']) <= 84000)
         #stop_times = (s for s in stop_times if s['trip_route'] == 'A')
 
-        for ((trip_id, trip_route), group) in groupby(
+        for ((trip_id, trip_route), group_it) in groupby(
                 stop_times, lambda s: (s['trip_id'], s['trip_route'])):
-            route = self.build_route(trip_route)
-            for stop in group:
+            if trip_route in self.routes:
+                #continue
+                route = self.routes[trip_route]
+            else:
+                route = Route(trip_route)
+                self.routes[trip_route] = route
+
+            group_stops = list(group_it)
+            # this should get important stops but may skip special stops
+            if len(route.stations) > len(group_stops):
+                continue
+            else:
+                route.stations = []
+
+            for stop in group_stops:
                 stop_id = stop['stop_id']
                 if (len(stop_id) != 4):
                     raise IndexError("invalid length: stop_id=%s" % stop_id)
@@ -37,9 +50,6 @@ class TransitSystem(object):
                     raise KeyError("No Station found for stop_id=%s" % stop_id)
                 if station not in route.stations:
                     route.stations.append(station)
-
-        #for _ in range(10):
-            #print stop_times.next()
 
     def parse_trip_id(self, stop_time_defs):
         """Parse a stop_id fields with form: A20121216WKD_000800_1..S03R"""
@@ -183,6 +193,9 @@ def main():
     for r in transit.routes.values():
         count += len(r.stations)
     print count
+
+    #for r in transit.routes['F'].stations:
+        #print r
 
     #print sorted(transit.stations.keys())
 
