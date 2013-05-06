@@ -24,6 +24,7 @@ class TransitSystem(object):
                       #60000 <= int(s['trip_start_time']) <= 84000)
         #stop_times = (s for s in stop_times if s['trip_route'] == 'A')
 
+        # add stations to self.routes
         for ((trip_id, trip_route), group_it) in groupby(
                 stop_times, lambda s: (s['trip_id'], s['trip_route'])):
             if trip_route in self.routes:
@@ -50,6 +51,11 @@ class TransitSystem(object):
                     raise KeyError("No Station found for stop_id=%s" % stop_id)
                 if station not in route.stations:
                     route.stations.append(station)
+
+        # add routes to self.stations
+        for r in self.routes.values():
+            for st in r.stations:
+                self.stations[st.id].routes.append(r)
 
     def parse_trip_id(self, stop_time_defs):
         """Parse a stop_id fields with form: A20121216WKD_000800_1..S03R"""
@@ -176,32 +182,16 @@ def main():
     with open('google_transit/stop_times.txt') as csvfile:
         transit.parse_stop_times(parse_csv(csvfile))
 
-    #with open('StationEntrances.csv', 'rb') as csvfile:
-        #transit.parse_station_entrances(parse_csv(csvfile))
-
-    #it = iter(transit.stations)
-    #for s in [it.next() for _ in range(10)]:
-        #print s
-
     #for s in transit.stations.values():
         #print repr(s)
-    #print transit.stations
     print len(transit.routes)
     print len(transit.routes['F'].stations)
 
-    count = 0
-    for r in transit.routes.values():
-        count += len(r.stations)
-    print count
-
-    #for r in transit.routes['F'].stations:
-        #print r
-
-    #print sorted(transit.stations.keys())
-
-    #print transit.routes['G'].str_full()
+    print sum(len(r.stations) for r in transit.routes.values())
     #print transit.routes['F'].str_full()
     #print "\n===\n".join(r.str_full() for r in transit.routes.values())
+
+    fourth_ave = transit.stations['F23']
 
     return transit
 
