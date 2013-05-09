@@ -1,4 +1,5 @@
 import csv
+import pickle
 from itertools import groupby
 
 
@@ -138,12 +139,23 @@ def parse_csv(csvfile):
     return (dict(zip(header, st)) for st in csvreader)
 
 
+def load_transit():
+    try:
+        with open("transit.pickle", "r") as f:
+            transit = pickle.load(f)
+    except IOError:
+        transit = TransitSystem()
+        with open("google_transit/stops.txt") as csvfile:
+            transit.parse_stops(parse_csv(csvfile))
+        with open("google_transit/stop_times.txt") as csvfile:
+            transit.parse_stop_times(parse_csv(csvfile))
+        with open("transit.pickle", "w") as f:
+            pickle.dump(transit, f)
+    return transit
+
+
 def main():
-    transit = TransitSystem()
-    with open('google_transit/stops.txt') as csvfile:
-        transit.parse_stops(parse_csv(csvfile))
-    with open('google_transit/stop_times.txt') as csvfile:
-        transit.parse_stop_times(parse_csv(csvfile))
+    transit = load_transit()
 
     #for s in transit.stations.values():
         #print repr(s)
