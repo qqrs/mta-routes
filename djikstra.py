@@ -1,7 +1,4 @@
 from priority_dict import priority_dict
-import sys
-
-INF = sys.maxint
 
 
 class Node(str):
@@ -23,9 +20,8 @@ def djikstra(nodes, start, end=None):
     graph edges represented as an adjacency list in Node.neighbors. If end is
     not None, the algorithm stops when a path to the end node is found.
     Otherwise, it continues until a path to all nodes is found."""
-    predecessors = dict.fromkeys(nodes, None)
-    distances = dict.fromkeys(nodes, INF)
-    distances[start] = 0
+    predecessors = dict()
+    distances = dict()
 
     queue = priority_dict()
     queue[start] = 0
@@ -45,7 +41,7 @@ def djikstra(nodes, start, end=None):
 
 def djikstra_path(nodes, start, end):
     (distances, predecessors) = djikstra(nodes, start, end)
-    if distances[end] == INF:
+    if end not in distances:
         return None
     path = []
     n = end
