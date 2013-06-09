@@ -116,7 +116,7 @@ class Station(object):
                 adjacent.add(r.stations[home_index+1])
             except IndexError:
                 pass
-        return list(adjacent)
+        return adjacent
 
 
 class Route(object):
@@ -159,17 +159,31 @@ def main():
 
     #for s in transit.stations.values():
         #print repr(s)
-    print len(transit.routes)
-    print len(transit.routes['F'].stations)
+    #print len(transit.routes)
+    #print len(transit.routes['F'].stations)
 
-    print sum(len(r.stations) for r in transit.routes.values())
+    #print sum(len(r.stations) for r in transit.routes.values())
     #print transit.routes['F'].str_full()
     #print "\n===\n".join(r.str_full() for r in transit.routes.values())
 
     fourth_ave = transit.stations['F23']
-    print fourth_ave.find_adjacent()
-    print transit.stations['A33'].find_adjacent()
-    print transit.stations['A41'].find_adjacent()
+    #print fourth_ave.find_adjacent()
+    #print transit.stations['A33'].find_adjacent()
+    #print transit.stations['A41'].find_adjacent()
+
+    #from Queue import PriorityQueue
+    #adj = PriorityQueue()
+    adj = set()
+    next_level = set([fourth_ave])
+    for _ in range(3):
+        this_level = next_level
+        next_level = set()
+        for n in this_level:
+            next_level.update(n.find_adjacent())
+        adj.update(this_level)
+
+    for n in adj:
+        print repr(n)
 
     return transit
 
