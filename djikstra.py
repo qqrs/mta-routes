@@ -15,22 +15,14 @@ class Node(str):
     def __str__(self):
         return "Node(" + self.name + ", " + "".join(self.neighbors) + ")"
 
-nodes = [Node(chr(ord('A') + x)) for x in range(5)]
-edges = [[1, 2],
-         [0, 4],
-         [0, 3],
-         [2, 4],
-         [1, 3]]
-for n, e in zip(nodes, edges):
-    n.neighbors.update(nodes[x] for x in e)
 
-#print "\n".join(str(n) for n in nodes)
+def djikstra(nodes, start, end=None):
+    """ Djikstra's algorithm for finding shortest paths.
 
-start = nodes[0]
-end = nodes[4]
-
-
-def djikstra(nodes, start, end):
+    Finds shortest paths from a start node in a graph of Node objects with
+    graph edges represented as an adjacency list in Node.neighbors. If end is
+    not None, the algorithm stops when a path to the end node is found.
+    Otherwise, it continues until a path to all nodes is found."""
     predecessors = dict.fromkeys(nodes, None)
     distances = dict.fromkeys(nodes, INF)
     distances[start] = 0
@@ -50,14 +42,38 @@ def djikstra(nodes, start, end):
 
     return (distances, predecessors)
 
-#def djikstra_path(nodes, start, end):
 
-(distances, predecessors) = djikstra(nodes, start, end)
-print distances[end]
-n = end
-while n != start:
-    print n
-    n = predecessors[n]
-print n
+def djikstra_path(nodes, start, end):
+    (distances, predecessors) = djikstra(nodes, start, end)
+    if distances[end] == INF:
+        return None
+    path = []
+    n = end
+    while n != start:
+        path.append(n)
+        n = predecessors[n]
+    path.append(n)
+    path.reverse()
+    return path
 
 
+def main():
+    # build test data
+    nodes = [Node(chr(ord('A') + x)) for x in range(5)]
+    edges = [[1, 2],
+            [0, 4],
+            [0, 3],
+            [2, 4],
+            [1, 3]]
+    for n, e in zip(nodes, edges):
+        n.neighbors.update(nodes[x] for x in e)
+
+    start = nodes[0]
+    end = nodes[4]
+    (distances, predecessors) = djikstra(nodes, start, end)
+
+    print distances[end]
+    print djikstra_path(nodes, start, end)
+
+if __name__ == "__main__":
+    ret = main()
