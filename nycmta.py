@@ -1,12 +1,14 @@
 import csv
 import pickle
 from itertools import groupby
+from djikstra import djikstra_path
 
 
 class TransitSystem(object):
     def __init__(self):
         self.stations = {}
         self.routes = {}
+        self.graph = {}
 
     def parse_stops(self, stops):
         """Parse data from stops.txt"""
@@ -86,6 +88,19 @@ class TransitSystem(object):
             self.routes[route_name] = Route(route_name)
         return self.routes[route_name]
 
+    def build_transit_graph(self):
+        """Build transit graph for path search.
+
+        Graph is represented as adjacency dict where graph[v][k] is edge weight
+        from Station v to k."""
+        # TODO: currently O(V*E), make it O(V+E)
+        for s in self.stations.values():
+            self.graph[s] = dict.fromkeys(s.find_adjacent(), 1.0)
+
+    def get_path(self, start, end):
+        """Find shortest path between stations."""
+        return djikstra_path(self.graph, start, end)
+
 
 class Station(object):
     def __init__(self, id, name, latitude, longitude, routes=None):
@@ -149,6 +164,7 @@ def load_transit():
             transit.parse_stops(parse_csv(csvfile))
         with open("google_transit/stop_times.txt") as csvfile:
             transit.parse_stop_times(parse_csv(csvfile))
+        transit.build_transit_graph()
         with open("transit.pickle", "w") as f:
             pickle.dump(transit, f)
     return transit
@@ -167,23 +183,30 @@ def main():
     #print "\n===\n".join(r.str_full() for r in transit.routes.values())
 
     fourth_ave = transit.stations['F23']
+    jay_street = transit.stations['A41']
+    spring_street = transit.stations['A33']
     #print fourth_ave.find_adjacent()
     #print transit.stations['A33'].find_adjacent()
     #print transit.stations['A41'].find_adjacent()
 
     #from Queue import PriorityQueue
     #adj = PriorityQueue()
-    adj = set()
-    next_level = set([fourth_ave])
-    for _ in range(3):
-        this_level = next_level
-        next_level = set()
-        for n in this_level:
-            next_level.update(n.find_adjacent())
-        adj.update(this_level)
 
-    for n in adj:
-        print repr(n)
+    #adj = set()
+    #next_level = set([fourth_ave])
+    #for _ in range(3):
+        #this_level = next_level
+        #next_level = set()
+        #for n in this_level:
+            #next_level.update(n.find_adjacent())
+        #adj.update(this_level)
+
+    #for n in adj:
+        #print repr(n)
+
+    path = transit.get_path(fourth_ave, spring_street)
+    for p in path:
+        print p
 
     return transit
 
