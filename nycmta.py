@@ -173,36 +173,16 @@ def load_transit():
 def main():
     transit = load_transit()
 
-    #for s in transit.stations.values():
-        #print repr(s)
-    #print len(transit.routes)
-    #print len(transit.routes['F'].stations)
-
-    #print sum(len(r.stations) for r in transit.routes.values())
     #print transit.routes['F'].str_full()
     #print "\n===\n".join(r.str_full() for r in transit.routes.values())
 
     fourth_ave = transit.stations['F23']
     jay_street = transit.stations['A41']
     spring_street = transit.stations['A33']
-    #print fourth_ave.find_adjacent()
-    #print transit.stations['A33'].find_adjacent()
-    #print transit.stations['A41'].find_adjacent()
 
-    #from Queue import PriorityQueue
-    #adj = PriorityQueue()
-
-    #adj = set()
-    #next_level = set([fourth_ave])
-    #for _ in range(3):
-        #this_level = next_level
-        #next_level = set()
-        #for n in this_level:
-            #next_level.update(n.find_adjacent())
-        #adj.update(this_level)
-
-    #for n in adj:
-        #print repr(n)
+    print fourth_ave.find_adjacent()
+    print jay_street.find_adjacent()
+    print spring_street.find_adjacent()
 
     path = transit.get_path(fourth_ave, spring_street)
     for p in path:
