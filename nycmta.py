@@ -1,7 +1,7 @@
 import csv
 import pickle
 from itertools import groupby
-from djikstra import djikstra_path
+from dijkstra import dijkstra_path
 
 
 class TransitSystem(object):
@@ -99,7 +99,7 @@ class TransitSystem(object):
 
     def get_path(self, start, end):
         """Find shortest path between stations."""
-        return djikstra_path(self.graph, start, end)
+        return dijkstra_path(self.graph, start, end)
 
 
 class Station(object):

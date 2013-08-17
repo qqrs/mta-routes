@@ -13,8 +13,8 @@ class Node(str):
         return "Node(" + self.name + ", " + "".join(self.neighbors) + ")"
 
 
-def djikstra(graph, start, end=None):
-    """ Djikstra's algorithm for finding shortest paths.
+def dijkstra(graph, start, end=None):
+    """ Dijkstra's algorithm for finding shortest paths.
 
     Finds shortest paths from a start node in a graph of Node objects with
     graph edges represented as an adjacency list in Node.neighbors. If end is
@@ -45,8 +45,8 @@ def djikstra(graph, start, end=None):
     return (distances, predecessors)
 
 
-def djikstra_path(graph, start, end):
-    (distances, predecessors) = djikstra(graph, start, end)
+def dijkstra_path(graph, start, end):
+    (distances, predecessors) = dijkstra(graph, start, end)
     if end not in distances:
         return None
     path = []
@@ -76,10 +76,10 @@ def main():
 
     start = nodes[0]
     end = nodes[4]
-    (distances, predecessors) = djikstra(graph, start, end)
+    (distances, predecessors) = dijkstra(graph, start, end)
     print distances[end]
 
-    print djikstra_path(graph, start, end)
+    print dijkstra_path(graph, start, end)
 
 if __name__ == "__main__":
     ret = main()
